@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>這算出軌嗎？判定表</title>
+<style>
+  :root{
+    --pink:#f02aa8;
+    --bg:#f1f2f4;
+    --text:#e82ca5;
+    --card:#fff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    background:var(--bg);
+    color:#333;
+  }
+  header{
+    position:sticky;top:0;z-index:10;
+    background:var(--pink);color:#fff;
+    padding:14px 16px;
+    box-shadow:0 2px 10px #0002;
+  }
+  header h1{margin:0;font-size:24px;text-align:center}
+  header p{margin:5px 0 0;text-align:center;font-size:13px}
+  .wrap{max-width:900px;margin:auto;padding:18px 12px 40px}
+  .intro{
+    background:#fff;border-radius:16px;padding:16px;
+    margin-bottom:14px;box-shadow:0 2px 8px #0001;
+  }
+  .intro h2{margin:0 0 8px;color:var(--pink);font-size:20px}
+  .legend{display:flex;gap:8px;flex-wrap:wrap}
+  .legend span{
+    background:#ffe3f4;color:#b7197e;border-radius:999px;
+    padding:6px 10px;font-size:13px;font-weight:700;
+  }
+  .progress{
+    position:sticky;top:69px;z-index:9;background:var(--bg);
+    padding:8px 0;
+  }
+  .bar{height:10px;background:#ddd;border-radius:999px;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--pink);transition:.2s}
+  .count{text-align:right;font-size:13px;margin-top:4px;color:#777}
+  .question{
+    background:#fff;border-radius:14px;padding:15px;margin:10px 0;
+    box-shadow:0 2px 8px #0001;
+  }
+  .qtext{font-size:17px;font-weight:700;line-height:1.55;margin-bottom:11px}
+  .num{color:var(--pink);margin-right:5px}
+  .choices{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+  .choices input{position:absolute;opacity:0}
+  .choices label{
+    border:2px solid #f4b4dd;border-radius:10px;padding:10px 6px;
+    text-align:center;color:#b7197e;font-weight:700;cursor:pointer;
+    background:#fff;transition:.15s;user-select:none;
+  }
+  .choices label:hover{background:#fff0f9}
+  .choices input:checked + label{
+    background:var(--pink);border-color:var(--pink);color:#fff;
+  }
+  .actions{
+    position:sticky;bottom:0;background:#ffffffee;backdrop-filter:blur(8px);
+    padding:12px 0;margin-top:12px;border-top:1px solid #ddd;
+    display:flex;gap:8px;flex-wrap:wrap;
+  }
+  button{
+    border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer;
+  }
+  #resultBtn{background:var(--pink);color:#fff;flex:1}
+  #resetBtn{background:#eee;color:#555}
+  #result{
+    display:none;background:#fff;border-radius:14px;padding:18px;margin-top:14px;
+    box-shadow:0 2px 8px #0001;
+  }
+  #result h2{color:var(--pink);margin-top:0}
+  .scores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .score{background:#fff0f9;border-radius:10px;padding:12px;text-align:center}
+  .score b{display:block;font-size:25px;color:var(--pink)}
+  .note{font-size:12px;color:#777;line-height:1.6}
+  @media(max-width:600px){
+    header h1{font-size:20px}
+    .qtext{font-size:16px}
+    .choices label{font-size:13px;padding:9px 3px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>這算出軌嗎？判定表</h1>
+  <p>和健屋一起埋藏看看！｜可直接勾選，進度會自動保存在本機</p>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <h2>請選擇最符合你的感受</h2>
+    <div class="legend">
+      <span>① 出軌</span>
+      <span>② 不是出軌，但討厭</span>
+      <span>③ 完全OK</span>
+    </div>
+  </section>
+
+  <div class="progress">
+    <div class="bar"><i id="progressBar"></i></div>
+    <div class="count" id="count">已回答 0 / 40</div>
+  </div>
+
+  <div id="questions"></div>
+
+  <div class="actions">
+    <button id="resultBtn">查看結果</button>
+    <button id="resetBtn">全部清除</button>
+  </div>
+
+  <section id="result">
+    <h2>結果</h2>
+    <div class="scores">
+      <div class="score">① 出軌<b id="s1">0</b></div>
+      <div class="score">② 不是出軌，但討厭<b id="s2">0</b></div>
+      <div class="score">③ 完全OK<b id="s3">0</b></div>
+    </div>
+    <p id="resultText"></p>
+    <p class="note">※這份表是用來整理自己的感受，不是判定伴侶是否真的出軌的客觀標準。不同伴侶的界線可能不同，建議把「為什麼這一項讓你不舒服」也一起討論。</p>
+  </section>
+</main>
+
+<script>
+const questions = [
+"和異性兩個人一起去吃午餐",
+"和學生時代就認識的異性好友兩個人一起吃飯",
+"下班後和異性同事兩個人一起喝酒",
+"和戀人也認識的異性朋友兩個人一起出去玩",
+"和異性朋友兩個人一起去看電影",
+"送異性朋友生日禮物",
+"收到異性朋友送的生日禮物",
+"每天都和異性朋友傳 LINE",
+"和認識很久、關係很好的異性打電話聊到深夜",
+"向異性朋友談戀愛方面的煩惱",
+"被異性稱讚「好可愛／好帥」，正常地感到高興",
+"對異性說「你今天很可愛呢」",
+"注意到異性的髮型或服裝改變並稱讚對方",
+"持有和異性朋友成套的物品",
+"把和異性朋友的聊天截圖發到 SNS",
+"把和異性的聊天截圖留在手機裡",
+"只用只有彼此才懂的暱稱稱呼異性朋友",
+"和異性朋友聊起只有你們兩個才知道的回憶而聊得很起勁",
+"被異性說「你是我最好的異性朋友」",
+"異性開玩笑說「如果和○○交往一定很開心吧」，笑著帶過",
+"因為異性朋友情緒低落，所以兩個人見面聽對方傾訴",
+"送因為錯過末班車的異性朋友回家",
+"因為異性朋友喝醉而攙扶／抱著對方",
+"因為異性朋友哭了而安慰對方",
+"把外套借給看起來很冷的異性",
+"和異性朋友兩個人幫忙搬家",
+"異性朋友說「現在可以見面嗎？」便去見對方",
+"和異性朋友兩個人去逛街，幫對方挑衣服",
+"和異性朋友兩個人去唱卡拉 OK",
+"和異性朋友兩個人去主題樂園",
+"仍然追蹤前任的 SNS",
+"對前任的貼文按讚",
+"前任傳來「好久不見」之類的訊息，所以回覆",
+"前任傳來「生日快樂」的 LINE，所以回覆「謝謝！」",
+"繼續正常使用前任送的錢包",
+"沒有刪除和前任的照片",
+"帶現在的戀人去和前任一起去過的回憶地點",
+"在共同朋友的婚禮上，和前任正常聊天",
+"聽說前任有了新的戀人，心裡想「太好了」",
+"前任傳來「好久不見，你最近好嗎？」之類的訊息，只來回幾次近況"
+];
+
+const key="cheating_check_tw";
+const saved=JSON.parse(localStorage.getItem(key)||"{}");
+const box=document.getElementById("questions");
+
+questions.forEach((q,i)=>{
+  const n=i+1;
+  const article=document.createElement("article");
+  article.className="question";
+  article.innerHTML=`
+    <div class="qtext"><span class="num">${String(n).padStart(2,"0")}.</span>${q}</div>
+    <div class="choices">
+      ${[1,2,3].map(v=>`
+        <input type="radio" id="q${n}-${v}" name="q${n}" value="${v}" ${saved[n]==v?"checked":""}>
+        <label for="q${n}-${v}">${v===1?"① 出軌":v===2?"② 不是出軌，但討厭":"③ 完全OK"}</label>
+      `).join("")}
+    </div>`;
+  box.appendChild(article);
+});
+
+function update(){
+  const data={};
+  let answered=0;
+  document.querySelectorAll("input[type=radio]:checked").forEach(x=>{
+    data[x.name.slice(1)]=Number(x.value); answered++;
+  });
+  localStorage.setItem(key,JSON.stringify(data));
+  document.getElementById("count").textContent=`已回答 ${answered} / 40`;
+  document.getElementById("progressBar").style.width=(answered/40*100)+"%";
+}
+document.addEventListener("change",update);
+update();
+
+document.getElementById("resultBtn").onclick=()=>{
+  const checked=[...document.querySelectorAll("input[type=radio]:checked")];
+  const scores=[0,0,0];
+  checked.forEach(x=>scores[Number(x.value)-1]++);
+  document.getElementById("s1").textContent=scores[0];
+  document.getElementById("s2").textContent=scores[1];
+  document.getElementById("s3").textContent=scores[2];
+  const result=document.getElementById("result");
+  result.style.display="block";
+  const max=Math.max(...scores), winners=scores.map((v,i)=>v===max?i+1:null).filter(Boolean);
+  document.getElementById("resultText").textContent =
+    checked.length<40
+    ? `目前已回答 ${checked.length} 題。40 題全部回答後再看，會比較容易整理整體傾向。`
+    : winners.length===1
+      ? `你的回答中最多的是「${winners[0]===1?"出軌":winners[0]===2?"不是出軌，但討厭":"完全OK"}」這一類，共 ${max} 題。`
+      : `最高分有並列（${winners.join("、")} 類）。單純分數不一定能代表你的界線，建議再看看哪些題目讓你特別在意。`;
+  result.scrollIntoView({behavior:"smooth",block:"start"});
+};
+
+document.getElementById("resetBtn").onclick=()=>{
+  if(!confirm("真的要清除全部勾選嗎？")) return;
+  localStorage.removeItem(key);
+  document.querySelectorAll("input[type=radio]").forEach(x=>x.checked=false);
+  document.getElementById("result").style.display="none";
+  update();
+  window.scrollTo({top:0,behavior:"smooth"});
+};
+</script>
+</body>
+</html>
